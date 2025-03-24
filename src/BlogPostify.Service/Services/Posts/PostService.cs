@@ -9,7 +9,6 @@ using BlogPostify.Service.Exceptions;
 using BlogPostify.Service.Interfaces.Posts;
 using BlogPostify.Service.Interfaces.Users;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace BlogPostify.Service.Services.Posts;
 
@@ -49,7 +48,6 @@ public class PostService : IPostService
         var mapped = mapper.Map<Post>(dto);
         mapped.CreatedAt = DateTime.UtcNow;
         mapped.CoverImage = imageResult;
-        mapped.Translations = dto.Translations ?? new Dictionary<string, TranslationModel>(); // ✅ Null emasligiga ishonch hosil qilish
 
         await repository.InsertAsync(mapped);
         return mapper.Map<PostForResultDto>(mapped);
@@ -78,7 +76,6 @@ public class PostService : IPostService
         return posts.Select(post =>
         {
             var dto = mapper.Map<PostForResultDto>(post);
-            dto.Translations = post.Translations; // Deserialize qilish shart emas!
             return dto;
         }).ToList();
     }
@@ -92,7 +89,6 @@ public class PostService : IPostService
         ?? throw new BlogPostifyException(404, "Post is not found");
 
         var result = mapper.Map<PostForResultDto>(post);
-        result.Translations = post.Translations; // JSON deserialize qilish shart emas!
 
         return result;
     }
@@ -123,7 +119,6 @@ public class PostService : IPostService
         #endregion
 
         post.IsPublished = dto.IsPublished;
-        post.Translations = dto.Translations ?? new Dictionary<string, TranslationModel>(); // ✅ Null emasligiga ishonch hosil qilish
         post.UpdatedAt = DateTime.UtcNow;
 
         await repository.UpdateAsync(post);

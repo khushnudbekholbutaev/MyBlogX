@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Data Base
 builder.Services.AddDbContext<DataContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 #region//// Fix the Cycle
 builder.Services.AddControllers()

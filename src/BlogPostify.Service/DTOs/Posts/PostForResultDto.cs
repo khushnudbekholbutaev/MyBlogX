@@ -8,7 +8,4 @@ public class PostForResultDto
     public string CoverImage { get; set; }
     public int UserId { get; set; }
     public bool IsPublished { get; set; }
-
-    // Barcha tarjimalarni JSON'dan parse qilish uchun
-    public Dictionary<string, TranslationModel> Translations { get; set; }
 }

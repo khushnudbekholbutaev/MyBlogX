@@ -6,8 +6,6 @@ namespace BlogPostify.Domain.Entities;
 
 public class Post : Auditable<int>
 {
-    [Column(TypeName = "jsonb")] // PostgreSQL uchun
-    public Dictionary<string, TranslationModel> Translations { get; set; } = new();
     public string CoverImage { get; set; }
     public int UserId { get; set; }
     public User User { get; set; }

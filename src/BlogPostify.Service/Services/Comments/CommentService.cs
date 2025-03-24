@@ -38,36 +38,34 @@ public class CommentService : ICommentService
         var post = await postService.RetrieveIdAsync(dto.PostId)
             ?? throw new BlogPostifyException(404, "Post is not found");
 
-        // Comment ni map qilish
-        var mapped = mapper.Map<Comment>(dto);
-        mapped.CreatedAt = DateTime.UtcNow;
+        // ParentCommentId = 0 bo‘lsa, uni null qilish (PostgreSQL bilan muammo bo‘lmasligi uchun)
+        dto.ParentCommentId = (dto.ParentCommentId.HasValue && dto.ParentCommentId.Value == 0)
+            ? null
+            : dto.ParentCommentId;
 
-        // Agar ParentCommentId null yoki 0 bo'lmasa, otasini topamiz
-        if (dto.ParentCommentId.HasValue && dto.ParentCommentId.Value > 0)
+        // Yangi comment yaratish
+        var comment = mapper.Map<Comment>(dto);
+        comment.CreatedAt = DateTime.UtcNow;
+
+        // Agar ParentCommentId mavjud bo‘lsa, validatsiya qilish
+        if (comment.ParentCommentId.HasValue)
         {
             var parentComment = await repository.SelectAll()
-                                                .Include(c => c.Replies)
-                                                .FirstOrDefaultAsync(c => c.Id == dto.ParentCommentId);
+                .FirstOrDefaultAsync(c => c.Id == comment.ParentCommentId);
 
             if (parentComment == null)
                 throw new BlogPostifyException(404, "Parent comment is not found");
-
-            mapped.ParentComment = parentComment; // Ota sharhni bog'lash
-            parentComment.Replies.Add(mapped); // Ota sharhga yangi javob qo'shish
-        }
-        else
-        {
-            mapped.ParentCommentId = null; // Agar ParentCommentId null yoki 0 bo'lsa, ParentCommentId ni null qilib qo'yish
         }
 
-        // Comment ni bazaga qo'shish
-        await repository.InsertAsync(mapped);
+        // Commentni bazaga qo‘shish
+        await repository.InsertAsync(comment);
 
-        // Natijani map qilish va qaytarish
-        return mapper.Map<CommentForResultDto>(mapped);
+        // Natijani qaytarish
+        return mapper.Map<CommentForResultDto>(comment);
     }
     public async Task<CommentForResultDto> ModifyAsync(long id, CommentForUpdateDto dto)
     {
+        // Commentni topish
         var comment = await repository.SelectAll()
             .Include(c => c.ParentComment) // Parent commentni olish
             .Include(c => c.Replies) // Replies ham bo‘lishi kerak 
@@ -78,21 +76,36 @@ public class CommentService : ICommentService
         mapper.Map(dto, comment);
         comment.UpdatedAt = DateTime.UtcNow;
 
-        // **Agar commentning ota commenti o‘zgargan bo‘lsa**, uni yangilash
+        // ParentCommentId = 0 bo‘lsa, uni null qilish (PostgreSQL bilan muammo bo‘lmasligi uchun)
+        dto.ParentCommentId = (dto.ParentCommentId.HasValue && dto.ParentCommentId.Value == 0)
+            ? null
+            : dto.ParentCommentId;
+
+        // Agar ParentCommentId o‘zgargan bo‘lsa, validatsiya qilish
         if (dto.ParentCommentId != comment.ParentCommentId)
         {
-            var newParent = await repository.SelectAll()
-                                            .FirstOrDefaultAsync(c => c.Id == dto.ParentCommentId);
+            if (dto.ParentCommentId.HasValue) // Agar yangi ota comment ID bor bo‘lsa
+            {
+                var newParent = await repository.SelectAll()
+                    .FirstOrDefaultAsync(c => c.Id == dto.ParentCommentId);
 
-            if (dto.ParentCommentId > 0 && newParent == null)
-                throw new BlogPostifyException(404, "Parent comment is not found");
+                if (newParent == null)
+                    throw new BlogPostifyException(404, "Parent comment is not found");
 
-            comment.ParentComment = newParent;
+                comment.ParentCommentId = newParent.Id; // Yangi parentni bog‘lash
+            }
+            else
+            {
+                comment.ParentCommentId = null; // Agar yangi ota comment kiritilmasa, null qilish
+            }
         }
 
+        // Commentni saqlash
+        await repository.UpdateAsync(comment);
+
+        // Natijani qaytarish
         return mapper.Map<CommentForResultDto>(comment);
     }
-
 
     public async Task<bool> RemoveAsync(long id)
     {

@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BlogPostify.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -91,7 +91,6 @@ namespace BlogPostify.Data.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Translations = table.Column<string>(type: "jsonb", nullable: false),
                     CoverImage = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     IsPublished = table.Column<bool>(type: "boolean", nullable: false),
@@ -103,6 +102,28 @@ namespace BlogPostify.Data.Migrations
                     table.PrimaryKey("PK_Post", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Post_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserRole",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    Role = table.Column<int>(type: "integer", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserRole", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserRole_User_UserId",
                         column: x => x.UserId,
                         principalTable: "User",
                         principalColumn: "Id",
@@ -321,6 +342,11 @@ namespace BlogPostify.Data.Migrations
                 name: "IX_PostTag_TagId",
                 table: "PostTag",
                 column: "TagId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserRole_UserId",
+                table: "UserRole",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -343,6 +369,9 @@ namespace BlogPostify.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "PostTag");
+
+            migrationBuilder.DropTable(
+                name: "UserRole");
 
             migrationBuilder.DropTable(
                 name: "Category");

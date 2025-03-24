@@ -43,17 +43,31 @@ public class DataContext : DbContext
             entity.HasMany(u => u.Notifications)
                   .WithOne(n => n.User)
                   .HasForeignKey(n => n.UserId);
+
+            entity.HasMany<UserRole>()
+                  .WithOne(ur => ur.User)
+                  .HasForeignKey(ur => ur.UserId);
         });
 
+        // ======================== USER ROLE CONFIGURATION ========================
+        modelBuilder.Entity<UserRole>(entity =>
+        {
+            entity.Property(ur => ur.UserId).IsRequired();
+
+            // Enum (Role) int sifatida saqlanadi
+            entity.Property(ur => ur.Role)
+                  .HasConversion<int>() // Enumni int sifatida saqlash
+                  .IsRequired();
+
+            entity.HasOne(ur => ur.User)
+                  .WithMany()
+                  .HasForeignKey(ur => ur.UserId);
+        });
+
+        // ======================== POST CONFIGURATION ========================
         modelBuilder.Entity<Post>(entity =>
         {
-            entity.Property(p => p.Translations)
-                  .HasColumnType("jsonb")
-                  .HasConversion(
-                      v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }),
-                      v => JsonSerializer.Deserialize<Dictionary<string, TranslationModel>>(v, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
-                  );
-
+            
             entity.Property(p => p.CoverImage)
                   .HasMaxLength(500);
 

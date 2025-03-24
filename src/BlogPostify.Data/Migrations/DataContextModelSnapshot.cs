@@ -197,10 +197,6 @@ namespace BlogPostify.Data.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Translations")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -338,6 +334,33 @@ namespace BlogPostify.Data.Migrations
                     b.ToTable("User");
                 });
 
+            modelBuilder.Entity("BlogPostify.Domain.Entities.Users.UserRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRole");
+                });
+
             modelBuilder.Entity("BlogPostify.Domain.Entities.BookMark", b =>
                 {
                     b.HasOne("BlogPostify.Domain.Entities.Post", "Post")
@@ -460,6 +483,17 @@ namespace BlogPostify.Data.Migrations
                     b.Navigation("Post");
 
                     b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("BlogPostify.Domain.Entities.Users.UserRole", b =>
+                {
+                    b.HasOne("BlogPostify.Domain.Entities.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BlogPostify.Domain.Entities.Category", b =>

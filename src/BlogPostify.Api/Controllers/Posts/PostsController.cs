@@ -30,8 +30,6 @@ public class PostsController : BaseController
         var filteredResult = result.Select(post => new
         {
             post.Id,
-            Title = post.Translations.ContainsKey(language) ? post.Translations[language].Title : post.Translations["uz"].Title,
-            Content = post.Translations.ContainsKey(language) ? post.Translations[language].Content : post.Translations["uz"].Content,
             post.CoverImage,
             post.UserId,
             post.IsPublished
@@ -49,8 +47,6 @@ public class PostsController : BaseController
         var filteredResult = new
         {
             result.Id,
-            Title = result.Translations.ContainsKey(language) ? result.Translations[language].Title : result.Translations["uz"].Title,
-            Content = result.Translations.ContainsKey(language) ? result.Translations[language].Content : result.Translations["uz"].Content,
             result.CoverImage,
             result.UserId,
             result.IsPublished
