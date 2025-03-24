@@ -11,8 +11,8 @@ public class DataContext : DbContext
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        //base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        base.OnModelCreating(modelBuilder);
 
         // ======================== USER CONFIGURATION ========================
         modelBuilder.Entity<User>(entity =>
@@ -74,32 +74,32 @@ public class DataContext : DbContext
             entity.HasOne(p => p.User)
                   .WithMany(u => u.Posts)
                   .HasForeignKey(p => p.UserId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(p => p.Comments)
                   .WithOne(c => c.Post)
                   .HasForeignKey(c => c.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(p => p.Likes)
                   .WithOne(l => l.Post)
                   .HasForeignKey(l => l.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(p => p.Bookmarks)
                   .WithOne(b => b.Post)
                   .HasForeignKey(b => b.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(p => p.PostCategories)
                   .WithOne(pc => pc.Post)
                   .HasForeignKey(pc => pc.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(p => p.PostTags)
                   .WithOne(pt => pt.Post)
                   .HasForeignKey(pt => pt.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ======================== COMMENT CONFIGURATION ========================
@@ -111,19 +111,19 @@ public class DataContext : DbContext
             entity.HasOne(c => c.Post)
                   .WithMany(p => p.Comments)
                   .HasForeignKey(c => c.PostId)
-                  .OnDelete(DeleteBehavior.Cascade); // Agar Post o'chirilsa, Comment ham o'chsin
+                  .OnDelete(DeleteBehavior.Restrict); // Agar Post o'chirilsa, Comment ham o'chsin
 
             // User bilan bog'lanish
             entity.HasOne(c => c.User)
                   .WithMany(u => u.Comments)
                   .HasForeignKey(c => c.UserId)
-                  .OnDelete(DeleteBehavior.Cascade); // Agar User o'chirilsa, Comment ham o'chsin
+                  .OnDelete(DeleteBehavior.Restrict); // Agar User o'chirilsa, Comment ham o'chsin
 
             // ParentComment (ota kommentariya) bilan bog'lanish
             entity.HasOne(c => c.ParentComment)
                   .WithMany(c => c.Replies)
                   .HasForeignKey(c => c.ParentCommentId)
-                  .OnDelete(DeleteBehavior.Restrict); // Agar ota kommentariya o'chirilsa, javoblar o'chmasin
+                  .OnDelete(DeleteBehavior.Cascade); // Agar ota kommentariya o'chirilsa, javoblar o'chmasin
 
             // ParentCommentId ni nullable qilish
             entity.Property(c => c.ParentCommentId)
