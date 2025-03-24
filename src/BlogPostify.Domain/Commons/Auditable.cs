@@ -2,6 +2,6 @@
 
 public abstract class Auditable<T> : BaseModel<T>
 {
-    public DateTime? UpdatedAt { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 }
