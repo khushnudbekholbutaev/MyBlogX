@@ -79,7 +79,7 @@ public class DataContext : DbContext
             entity.HasMany(p => p.Comments)
                   .WithOne(c => c.Post)
                   .HasForeignKey(c => c.PostId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasMany(p => p.Likes)
                   .WithOne(l => l.Post)
@@ -123,7 +123,7 @@ public class DataContext : DbContext
             entity.HasOne(c => c.ParentComment)
                   .WithMany(c => c.Replies)
                   .HasForeignKey(c => c.ParentCommentId)
-                  .OnDelete(DeleteBehavior.Cascade); // Agar ota kommentariya o'chirilsa, javoblar o'chmasin
+                  .OnDelete(DeleteBehavior.Restrict); // Agar ota kommentariya o'chirilsa, javoblar o'chmasin
 
             // ParentCommentId ni nullable qilish
             entity.Property(c => c.ParentCommentId)
