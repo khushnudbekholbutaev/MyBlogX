@@ -8,12 +8,9 @@ using System.Text.Json;
 public class DataContext : DbContext
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options) { }
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        //base.OnModelCreating(modelBuilder);
-
         // ======================== USER CONFIGURATION ========================
         modelBuilder.Entity<User>(entity =>
         {
@@ -23,58 +20,75 @@ public class DataContext : DbContext
             entity.Property(u => u.Bio).HasMaxLength(500);
             entity.Property(u => u.ProfileImageUrl).HasMaxLength(300);
 
-            // Navigation Properties
             entity.HasMany(u => u.Posts)
                   .WithOne(p => p.User)
-                  .HasForeignKey(p => p.UserId);
+                  .HasForeignKey(p => p.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasMany(u => u.Comments)
                   .WithOne(c => c.User)
-                  .HasForeignKey(c => c.UserId);
+                  .HasForeignKey(c => c.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasMany(u => u.Likes)
                   .WithOne(l => l.User)
-                  .HasForeignKey(l => l.UserId);
+                  .HasForeignKey(l => l.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasMany(u => u.Bookmarks)
                   .WithOne(b => b.User)
-                  .HasForeignKey(b => b.UserId);
+                  .HasForeignKey(b => b.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasMany(u => u.Notifications)
                   .WithOne(n => n.User)
-                  .HasForeignKey(n => n.UserId);
+                  .HasForeignKey(n => n.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
 
-            entity.HasMany<UserRole>()
+            entity.HasMany(u => u.RefreshTokens)
+                  .WithOne(rt => rt.User)
+                  .HasForeignKey(rt => rt.UserId)
+                  .OnDelete(DeleteBehavior.Cascade); // ✅ RefreshToken o‘chishi kerak
+
+            entity.HasMany(u => u.UserRoles)
                   .WithOne(ur => ur.User)
-                  .HasForeignKey(ur => ur.UserId);
+                  .HasForeignKey(ur => ur.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
 
         // ======================== USER ROLE CONFIGURATION ========================
         modelBuilder.Entity<UserRole>(entity =>
         {
             entity.Property(ur => ur.UserId).IsRequired();
-
-            // Enum (Role) int sifatida saqlanadi
-            entity.Property(ur => ur.Role)
-                  .HasConversion<int>() // Enumni int sifatida saqlash
-                  .IsRequired();
+            entity.Property(ur => ur.Role).HasConversion<int>().IsRequired();
 
             entity.HasOne(ur => ur.User)
-                  .WithMany()
-                  .HasForeignKey(ur => ur.UserId);
+                  .WithMany(u => u.UserRoles)
+                  .HasForeignKey(ur => ur.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // ======================== REFRESH TOKEN CONFIGURATION ========================
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.Property(rt => rt.Token).IsRequired();
+            entity.Property(rt => rt.ExpiryDate).IsRequired();
+
+            entity.HasOne(rt => rt.User)
+                  .WithMany(u => u.RefreshTokens)
+                  .HasForeignKey(rt => rt.UserId)
+                  .OnDelete(DeleteBehavior.Cascade); // ✅ To‘g‘ri ishlaydi
         });
 
         // ======================== POST CONFIGURATION ========================
         modelBuilder.Entity<Post>(entity =>
         {
-            
-            entity.Property(p => p.CoverImage)
-                  .HasMaxLength(500);
+            entity.Property(p => p.CoverImage).HasMaxLength(500);
 
             entity.HasOne(p => p.User)
                   .WithMany(u => u.Posts)
                   .HasForeignKey(p => p.UserId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Cascade); // ✅ Post o‘chsa, hammasi o‘chadi
 
             entity.HasMany(p => p.Comments)
                   .WithOne(c => c.Post)
@@ -107,52 +121,50 @@ public class DataContext : DbContext
         {
             entity.Property(c => c.Content).IsRequired();
 
-            // Post bilan bog'lanish
             entity.HasOne(c => c.Post)
                   .WithMany(p => p.Comments)
                   .HasForeignKey(c => c.PostId)
-                  .OnDelete(DeleteBehavior.Cascade); // Agar Post o'chirilsa, Comment ham o'chsin
+                  .OnDelete(DeleteBehavior.Cascade);
 
-            // User bilan bog'lanish
             entity.HasOne(c => c.User)
                   .WithMany(u => u.Comments)
                   .HasForeignKey(c => c.UserId)
-                  .OnDelete(DeleteBehavior.Cascade); // Agar User o'chirilsa, Comment ham o'chsin
+                  .OnDelete(DeleteBehavior.NoAction);
 
-            // ParentComment (ota kommentariya) bilan bog'lanish
             entity.HasOne(c => c.ParentComment)
                   .WithMany(c => c.Replies)
                   .HasForeignKey(c => c.ParentCommentId)
-                  .OnDelete(DeleteBehavior.Restrict); // Agar ota kommentariya o'chirilsa, javoblar o'chmasin
+                  .OnDelete(DeleteBehavior.Restrict); // ✅ Javoblar saqlansin
 
-            // ParentCommentId ni nullable qilish
-            entity.Property(c => c.ParentCommentId)
-                  .IsRequired(false); // Null bo'lishi mumkin
+            entity.Property(c => c.ParentCommentId).IsRequired(false);
         });
+
         // ======================== LIKE CONFIGURATION ========================
         modelBuilder.Entity<Like>(entity =>
         {
-            // Navigation Properties
             entity.HasOne(l => l.Post)
                   .WithMany(p => p.Likes)
-                  .HasForeignKey(l => l.PostId);
+                  .HasForeignKey(l => l.PostId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(l => l.User)
                   .WithMany(u => u.Likes)
-                  .HasForeignKey(l => l.UserId);
+                  .HasForeignKey(l => l.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
 
         // ======================== BOOKMARK CONFIGURATION ========================
         modelBuilder.Entity<BookMark>(entity =>
         {
-            // Navigation Properties
             entity.HasOne(b => b.User)
                   .WithMany(u => u.Bookmarks)
-                  .HasForeignKey(b => b.UserId);
+                  .HasForeignKey(b => b.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasOne(b => b.Post)
                   .WithMany(p => p.Bookmarks)
-                  .HasForeignKey(b => b.PostId);
+                  .HasForeignKey(b => b.PostId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // ======================== NOTIFICATION CONFIGURATION ========================
@@ -161,10 +173,35 @@ public class DataContext : DbContext
             entity.Property(n => n.Message).IsRequired().HasMaxLength(500);
             entity.Property(n => n.IsRead).HasDefaultValue(false);
 
-            // Navigation Properties
             entity.HasOne(n => n.User)
                   .WithMany(u => u.Notifications)
-                  .HasForeignKey(n => n.UserId);
+                  .HasForeignKey(n => n.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // ======================== CATEGORY CONFIGURATION ========================
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.Property(e => e.Name)
+                  .IsRequired()
+                  .HasMaxLength(200);
+
+            entity.Property(e => e.Description)
+                  .IsRequired()
+                  .HasMaxLength(500);
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnType("datetimeoffset")
+                  .IsRequired();
+
+            entity.Property(e => e.UpdatedAt)
+                  .HasColumnType("datetimeoffset")
+                  .IsRequired(false); // ✅ NULL bo‘lishi mumkin
+
+            entity.HasMany(e => e.PostCategories)
+                  .WithOne(pc => pc.Category)
+                  .HasForeignKey(pc => pc.CategoryId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
