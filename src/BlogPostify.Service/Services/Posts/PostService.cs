@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BlogPostify.Data.IRepositories;
+using BlogPostify.Domain.Commons;
 using BlogPostify.Domain.Configurations;
 using BlogPostify.Domain.Entities;
 using BlogPostify.Service.Commons.CollectionExtensions;
@@ -34,20 +35,20 @@ public class PostService : IPostService
             ?? throw new BlogPostifyException(404, "User not found");
 
         #region Image
-        var imageFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(dto.CoverImage.FileName);
-        var imageRootPath = Path.Combine(WebEnvironmentHost.WebRootPath, "Media", "Posts", "Images", imageFileName);
+        //var imageFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(dto.CoverImage.FileName);
+        //var imageRootPath = Path.Combine(WebEnvironmentHost.WebRootPath, "Media", "Posts", "Images", imageFileName);
 
-        using (var stream = new FileStream(imageRootPath, FileMode.Create))
-        {
-            await dto.CoverImage.CopyToAsync(stream);
-        }
+        //using (var stream = new FileStream(imageRootPath, FileMode.Create))
+        //{
+        //    await dto.CoverImage.CopyToAsync(stream);
+        //}
 
-        var imageResult = Path.Combine("Media", "Posts", "Images", imageFileName);
+        //var imageResult = Path.Combine("Media", "Posts", "Images", imageFileName);
         #endregion
 
         var mapped = mapper.Map<Post>(dto);
         mapped.CreatedAt = DateTime.UtcNow;
-        mapped.CoverImage = imageResult;
+        mapped.CoverImage = "string";
 
         await repository.InsertAsync(mapped);
         return mapper.Map<PostForResultDto>(mapped);
@@ -61,23 +62,31 @@ public class PostService : IPostService
         await repository.DeleteAsync(id);
         return true;
     }
-    public async Task<IEnumerable<PostForResultDto>> RetrieveAllAsync(PaginationParams @params)
+    public async Task<IEnumerable<LanguageForResultDto>> RetrieveByLanguageAsync(string language)
     {
         var posts = await repository.SelectAll()
-                                    .Include(p => p.Bookmarks)
-                                    .Include(p => p.Comments)
-                                    .Include(p => p.Likes)
-                                    .Include(p => p.PostCategories)
-                                    .Include(p => p.PostTags)
-                                    .ToPagedList(@params)
-                                    .AsNoTracking()
-                                    .ToListAsync();
+            .Where(p => p.IsPublished)
+            .Select(p => new LanguageForResultDto
+            {
+                Title = GetLanguageField(p.Title, language),
+                Content = GetLanguageField(p.Content, language),
+                CoverImage = p.CoverImage
+            })
+            .ToListAsync();
 
-        return posts.Select(post =>
+        return posts;
+    }
+
+    private string GetLanguageField(MultyLanguageField field, string language)
+    {
+        return language.ToLower() switch
         {
-            var dto = mapper.Map<PostForResultDto>(post);
-            return dto;
-        }).ToList();
+            "uz" => field.Uz,
+            "ru" => field.Ru,
+            "eng" => field.Eng,
+            "tr" => field.Tr,
+            _ => field.Uz // Default to Uzbek if the language is not recognized
+        };
     }
 
     public async Task<PostForResultDto> RetrieveIdAsync(int id)

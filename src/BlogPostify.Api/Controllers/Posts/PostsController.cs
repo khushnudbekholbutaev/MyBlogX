@@ -1,8 +1,7 @@
-﻿using BlogPostify.Domain.Configurations;
-using BlogPostify.Service.DTOs.Posts;   
-using BlogPostify.Service.Interfaces.Posts;
+﻿using ResultWrapper.Library;
 using Microsoft.AspNetCore.Mvc;
-using ResultWrapper.Library;
+using BlogPostify.Service.DTOs.Posts;
+using BlogPostify.Service.Interfaces.Posts;
 
 namespace BlogPostify.Api.Controllers.Posts;
 
@@ -15,21 +14,20 @@ public class PostsController : BaseController
         this.postService = postService;
     }
     [HttpPost]
-    public async Task<Wrapper> InsertAsync([FromForm] PostForCreationDto dto)
+    public async Task<Wrapper> InsertAsync([FromBody] PostForCreationDto dto)
     {
         var result = await postService.AddAsync(dto);
         return new Wrapper(result);
     }
 
     [HttpGet]
-    public async Task<Wrapper> GetAllAsync([FromQuery] PaginationParams @params, [FromQuery] string? language = "uz")
+    public async Task<Wrapper> GetAllAsync([FromQuery] string? language = "uz")
     {
-        var result = await postService.RetrieveAllAsync(@params);
+        var result = await postService.RetrieveByLanguageAsync(language);
 
         // Foydalanuvchi tanlagan til bo‘yicha ma'lumotni qaytarish
         var filteredResult = result.Select(post => new
         {
-            post.Id,
             post.CoverImage,
             post.UserId,
             post.IsPublished

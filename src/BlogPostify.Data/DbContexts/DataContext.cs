@@ -1,16 +1,25 @@
-﻿using BlogPostify.Domain.Entities;
+﻿using BlogPostify.Domain.Commons;
+using BlogPostify.Domain.Entities;
 using BlogPostify.Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Reflection;
-using System.Text.Json;
 
 public class DataContext : DbContext
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var multyLanguageFields = modelBuilder.Model
+            .GetEntityTypes()
+            .SelectMany(x => x.ClrType.GetProperties())
+            .Where(x => x.PropertyType == typeof(MultyLanguageField));
+
+        foreach (var field in multyLanguageFields)
+            modelBuilder.Entity(field.DeclaringType)
+             .Property(field.PropertyType, field.Name)
+             .HasColumnType("varchar");
+        
         // ======================== USER CONFIGURATION ========================
         modelBuilder.Entity<User>(entity =>
         {

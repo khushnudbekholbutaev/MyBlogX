@@ -12,7 +12,6 @@ using BlogPostify.Service.DTOs.PostTags;
 using BlogPostify.Service.DTOs.Tags;
 using BlogPostify.Service.DTOs.UserRoles;
 using BlogPostify.Service.DTOs.Users;
-using System.Runtime.CompilerServices;
 
 namespace BlogPostify.Service.Mappers;
 
