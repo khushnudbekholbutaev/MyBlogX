@@ -62,14 +62,14 @@ public class PostService : IPostService
         await repository.DeleteAsync(id);
         return true;
     }
-    public async Task<LanguageResultDto> RetrieveByLanguageAsync(int id, string language)
+    public async Task<LanguageResultDto> RetrieveByLanguageAsync(string language)
     {
         var post = await repository.SelectAll()
-            .Where(p => p.Id == id && p.IsPublished)
+            .Where(p => p.IsPublished)
             .FirstOrDefaultAsync();
 
-        if (post == null)
-            throw new KeyNotFoundException($"Post with ID {id} not found!");
+        if (post == null) 
+            throw new KeyNotFoundException($"Post with ID not found!");
 
         if (post.Title == null || post.Content == null)
             throw new InvalidOperationException("Post Title or Content is null!");

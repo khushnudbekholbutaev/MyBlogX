@@ -8,6 +8,6 @@ public interface IPostService
     Task<bool> RemoveAsync(int id);
     Task<PostForResultDto> RetrieveIdAsync(int id);
     Task<PostForResultDto> AddAsync(PostForCreationDto dto);
-    Task<PostForResultDto> ModifyAsync(int id,PostForUpdateDto dto);
-    Task<LanguageResultDto> RetrieveByLanguageAsync(int id, string language);
+    Task<PostForResultDto> ModifyAsync(int id, PostForUpdateDto dto);
+    Task<LanguageResultDto> RetrieveByLanguageAsync(string language);
 }
