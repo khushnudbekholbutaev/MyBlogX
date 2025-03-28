@@ -151,7 +151,7 @@ public class DataContext : DbContext
             entity.HasOne(c => c.User)
                   .WithMany(u => u.Comments)
                   .HasForeignKey(c => c.UserId)
-                  .OnDelete(DeleteBehavior.SetNull); // Agar User o'chirilsa, Comment ham o'chsin
+                  .OnDelete(DeleteBehavior.Restrict); // Agar User o'chirilsa, Comment ham o'chsin
 
             entity.HasOne(c => c.ParentComment)
                   .WithMany(c => c.Replies)
