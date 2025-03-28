@@ -8,7 +8,7 @@ public class PostForResultDto
     public MultyLanguageField Title { get; set; }
     public MultyLanguageField Content { get; set; }
     public int Id { get; set; }
-    public string CoverImage { get; set; } = "string";
+    public string CoverImage { get; set; };
     public int UserId { get; set; }
     public bool IsPublished { get; set; }
 }
