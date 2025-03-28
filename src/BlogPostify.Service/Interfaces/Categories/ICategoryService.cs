@@ -10,4 +10,5 @@ public interface ICategoryService
     Task<CategoryForResultDto> AddAsync(CategoryForCreationDto dto);
     Task<CategoryForResultDto> ModifyAsync(int id,CategoryForUpdateDto dto);
     Task<IEnumerable<CategoryForResultDto>> RetrieveAllAsync(PaginationParams @params);
+    Task<LanguageResultDto> RetrieveByLanguageAsync(int id, string language);
 }

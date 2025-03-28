@@ -22,20 +22,10 @@ public class PostsController : BaseController
     }
 
     [HttpGet]
-    public async Task<Wrapper> GetAllAsync([FromQuery] PaginationParams @params, [FromQuery] string? language = "uz")
+    public async Task<Wrapper> GetAllAsync(int id, string language)
     {
-        var result = await postService.RetrieveAllAsync(@params);
-
-        // Foydalanuvchi tanlagan til bo‘yicha ma'lumotni qaytarish
-        var filteredResult = result.Select(post => new
-        {
-            post.Id,
-            post.CoverImage,
-            post.UserId,
-            post.IsPublished
-        });
-
-        return new Wrapper(filteredResult);
+        var result = await postService.RetrieveByLanguageAsync(id, language);
+        return new Wrapper(result);
     }
 
     [HttpGet("{id}")]

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BlogPostify.Data.IRepositories;
+using BlogPostify.Domain.Commons;
 using BlogPostify.Domain.Configurations;
 using BlogPostify.Domain.Entities;
 using BlogPostify.Service.Commons.CollectionExtensions;
@@ -34,20 +35,20 @@ public class PostService : IPostService
             ?? throw new BlogPostifyException(404, "User not found");
 
         #region Image
-        var imageFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(dto.CoverImage.FileName);
-        var imageRootPath = Path.Combine(WebEnvironmentHost.WebRootPath, "Media", "Posts", "Images", imageFileName);
+        //var imageFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(dto.CoverImage.FileName);
+        //var imageRootPath = Path.Combine(WebEnvironmentHost.WebRootPath, "Media", "Posts", "Images", imageFileName);
 
-        using (var stream = new FileStream(imageRootPath, FileMode.Create))
-        {
-            await dto.CoverImage.CopyToAsync(stream);
-        }
+        //using (var stream = new FileStream(imageRootPath, FileMode.Create))
+        //{
+        //    await dto.CoverImage.CopyToAsync(stream);
+        //}
 
-        var imageResult = Path.Combine("Media", "Posts", "Images", imageFileName);
+        //var imageResult = Path.Combine("Media", "Posts", "Images", imageFileName);
         #endregion
 
         var mapped = mapper.Map<Post>(dto);
         mapped.CreatedAt = DateTime.UtcNow;
-        mapped.CoverImage = imageResult;
+        mapped.CoverImage = "string";
 
         await repository.InsertAsync(mapped);
         return mapper.Map<PostForResultDto>(mapped);
@@ -61,23 +62,44 @@ public class PostService : IPostService
         await repository.DeleteAsync(id);
         return true;
     }
-    public async Task<IEnumerable<PostForResultDto>> RetrieveAllAsync(PaginationParams @params)
+    public async Task<LanguageResultDto> RetrieveByLanguageAsync(int id, string language)
     {
-        var posts = await repository.SelectAll()
-                                    .Include(p => p.Bookmarks)
-                                    .Include(p => p.Comments)
-                                    .Include(p => p.Likes)
-                                    .Include(p => p.PostCategories)
-                                    .Include(p => p.PostTags)
-                                    .ToPagedList(@params)
-                                    .AsNoTracking()
-                                    .ToListAsync();
+        var post = await repository.SelectAll()
+            .Where(p => p.Id == id && p.IsPublished)
+            .FirstOrDefaultAsync();
 
-        return posts.Select(post =>
+        if (post == null)
+            throw new KeyNotFoundException($"Post with ID {id} not found!");
+
+        if (post.Title == null || post.Content == null)
+            throw new InvalidOperationException("Post Title or Content is null!");
+
+        string title = GetLocalizedText(post.Title, language);
+        string content = GetLocalizedText(post.Content, language);
+
+        return new LanguageResultDto
         {
-            var dto = mapper.Map<PostForResultDto>(post);
-            return dto;
-        }).ToList();
+            Id = post.Id,
+            Title = title,
+            Content = content,
+            CoverImage = post.CoverImage ?? "default-image.png",
+            IsPublished = post.IsPublished
+        };
+    }
+
+    private string GetLocalizedText(MultyLanguageField field, string language)
+    {
+        if (field == null)
+            return "No translation available";
+
+        return language switch
+        {
+            "uz" => !string.IsNullOrEmpty(field.Uz) ? field.Uz : field.Eng,
+            "ru" => !string.IsNullOrEmpty(field.Ru) ? field.Ru : field.Eng,
+            "eng" => !string.IsNullOrEmpty(field.Eng) ? field.Eng : field.Uz,
+            "tr" => !string.IsNullOrEmpty(field.Tr) ? field.Tr : field.Eng,
+            _ => field.Uz
+        };
     }
 
     public async Task<PostForResultDto> RetrieveIdAsync(int id)
@@ -124,5 +146,4 @@ public class PostService : IPostService
         await repository.UpdateAsync(post);
         return mapper.Map<PostForResultDto>(post);
     }
-
 }

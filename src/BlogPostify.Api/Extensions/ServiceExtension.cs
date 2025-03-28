@@ -1,6 +1,7 @@
 ﻿using BlogPostify.Data.IRepositories;
 using BlogPostify.Data.Repositories;
 using BlogPostify.Domain.Entities;
+using BlogPostify.Service.Interfaces.Auths;
 using BlogPostify.Service.Interfaces.BookMarks;
 using BlogPostify.Service.Interfaces.Categories;
 using BlogPostify.Service.Interfaces.Comments;
@@ -12,6 +13,7 @@ using BlogPostify.Service.Interfaces.PostTags;
 using BlogPostify.Service.Interfaces.Tags;
 using BlogPostify.Service.Interfaces.Users;
 using BlogPostify.Service.Mappers;
+using BlogPostify.Service.Services.Auths;
 using BlogPostify.Service.Services.BookMarks;
 using BlogPostify.Service.Services.Categories;
 using BlogPostify.Service.Services.Comments;
@@ -33,6 +35,10 @@ public static class ServiceExtension
 
         //Folder Name: User Service
         services.AddScoped<IUserService, UserService>();
+
+        // Folder Name : Auth Service
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
         // Folder Name : User Role Service
         services.AddScoped<IUserRoleService,UserRoleService>();
