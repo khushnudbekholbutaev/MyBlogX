@@ -120,22 +120,22 @@ public class DataContext : DbContext
             entity.HasMany(p => p.Likes)
                   .WithOne(l => l.Post)
                   .HasForeignKey(l => l.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(p => p.Bookmarks)
                   .WithOne(b => b.Post)
                   .HasForeignKey(b => b.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(p => p.PostCategories)
                   .WithOne(pc => pc.Post)
                   .HasForeignKey(pc => pc.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(p => p.PostTags)
                   .WithOne(pt => pt.Post)
                   .HasForeignKey(pt => pt.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ======================== COMMENT CONFIGURATION ========================
@@ -146,12 +146,12 @@ public class DataContext : DbContext
             entity.HasOne(c => c.Post)
                   .WithMany(p => p.Comments)
                   .HasForeignKey(c => c.PostId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .OnDelete(DeleteBehavior.Restrict); // Agar Post o'chirilsa, Comment ham o'chsin
 
             entity.HasOne(c => c.User)
                   .WithMany(u => u.Comments)
                   .HasForeignKey(c => c.UserId)
-                  .OnDelete(DeleteBehavior.NoAction);
+                  .OnDelete(DeleteBehavior.Restrict); // Agar User o'chirilsa, Comment ham o'chsin
 
             entity.HasOne(c => c.ParentComment)
                   .WithMany(c => c.Replies)
