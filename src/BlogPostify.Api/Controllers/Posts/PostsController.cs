@@ -22,9 +22,9 @@ public class PostsController : BaseController
     }
 
     [HttpGet]
-    public async Task<Wrapper> GetAllAsync(int id, string language)
+    public async Task<Wrapper> GetAllAsync(string language)
     {
-        var result = await postService.RetrieveByLanguageAsync(id, language);
+        var result = await postService.RetrieveByLanguageAsync(language);
         return new Wrapper(result);
     }
 

@@ -36,9 +36,9 @@ public class CategoriesController : BaseController
     }
 
     [HttpGet("{language}")]
-    public async Task<Wrapper> GetAsync(int id, string language)
+    public async Task<Wrapper> GetAsync(string language)
     {
-        var result = await categoryService.RetrieveByLanguageAsync(id, language);
+        var result = await categoryService.RetrieveByLanguageAsync(language);
         return new Wrapper(result);
     }
 

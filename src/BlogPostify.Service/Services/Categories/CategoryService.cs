@@ -78,14 +78,13 @@ public class CategoryService : ICategoryService
         return mapper.Map<CategoryForResultDto>(category);
     }
 
-    public async Task<LanguageResultDto> RetrieveByLanguageAsync(int id, string language)
+    public async Task<LanguageResultDto> RetrieveByLanguageAsync(string language)
     {
         var ctr = await repository.SelectAll()
-              .Where(p => p.Id == id)
               .FirstOrDefaultAsync();
 
         if (ctr == null)
-            throw new KeyNotFoundException($"Category with ID {id} not found!");
+            throw new KeyNotFoundException($"Category with ID not found!");
 
         if (ctr.Name == null)
             throw new InvalidOperationException("Post Name is null!");

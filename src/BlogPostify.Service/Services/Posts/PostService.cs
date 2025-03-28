@@ -35,20 +35,20 @@ public class PostService : IPostService
             ?? throw new BlogPostifyException(404, "User not found");
 
         #region Image
-        //var imageFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(dto.CoverImage.FileName);
-        //var imageRootPath = Path.Combine(WebEnvironmentHost.WebRootPath, "Media", "Posts", "Images", imageFileName);
+        var imageFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(dto.CoverImage.FileName);
+        var imageRootPath = Path.Combine(WebEnvironmentHost.WebRootPath, "Media", "Posts", "Images", imageFileName);
 
-        //using (var stream = new FileStream(imageRootPath, FileMode.Create))
-        //{
-        //    await dto.CoverImage.CopyToAsync(stream);
-        //}
+        using (var stream = new FileStream(imageRootPath, FileMode.Create))
+        {
+            await dto.CoverImage.CopyToAsync(stream);
+        }
 
-        //var imageResult = Path.Combine("Media", "Posts", "Images", imageFileName);
+        var imageResult = Path.Combine("Media", "Posts", "Images", imageFileName);
         #endregion
 
         var mapped = mapper.Map<Post>(dto);
         mapped.CreatedAt = DateTime.UtcNow;
-        mapped.CoverImage = "string";
+        mapped.CoverImage = imageResult;
 
         await repository.InsertAsync(mapped);
         return mapper.Map<PostForResultDto>(mapped);
@@ -62,14 +62,14 @@ public class PostService : IPostService
         await repository.DeleteAsync(id);
         return true;
     }
-    public async Task<LanguageResultDto> RetrieveByLanguageAsync(int id, string language)
+    public async Task<LanguageResultDto> RetrieveByLanguageAsync(string language)
     {
         var post = await repository.SelectAll()
-            .Where(p => p.Id == id && p.IsPublished)
+            .Where(p => p.IsPublished)
             .FirstOrDefaultAsync();
 
-        if (post == null)
-            throw new KeyNotFoundException($"Post with ID {id} not found!");
+        if (post == null) 
+            throw new KeyNotFoundException($"Post with ID not found!");
 
         if (post.Title == null || post.Content == null)
             throw new InvalidOperationException("Post Title or Content is null!");
@@ -82,7 +82,7 @@ public class PostService : IPostService
             Id = post.Id,
             Title = title,
             Content = content,
-            CoverImage = post.CoverImage ?? "default-image.png",
+            CoverImage = post.CoverImage,
             IsPublished = post.IsPublished
         };
     }
