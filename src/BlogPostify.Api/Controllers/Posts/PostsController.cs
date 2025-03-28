@@ -29,20 +29,10 @@ public class PostsController : BaseController
     }
 
     [HttpGet("{id}")]
-    public async Task<Wrapper> GetByIdAsync([FromRoute] int id, [FromQuery] string? language = "uz")
+    public async Task<Wrapper> GetByIdAsync([FromRoute] int id)
     {
         var result = await postService.RetrieveIdAsync(id);
-
-        // Foydalanuvchi tanlagan til bo‘yicha ma'lumotni qaytarish
-        var filteredResult = new
-        {
-            result.Id,
-            result.CoverImage,
-            result.UserId,
-            result.IsPublished
-        };
-
-        return new Wrapper(filteredResult);
+        return new Wrapper(result);
     }
 
     [HttpDelete("{id}")]
