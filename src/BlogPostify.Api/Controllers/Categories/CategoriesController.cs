@@ -35,6 +35,13 @@ public class CategoriesController : BaseController
         return new Wrapper(result);
     }
 
+    [HttpGet("{language}")]
+    public async Task<Wrapper> GetAsync(int id, string language)
+    {
+        var result = await categoryService.RetrieveByLanguageAsync(id, language);
+        return new Wrapper(result);
+    }
+
     [HttpDelete("{id}")]
     public async Task<Wrapper> DeleteAsync([FromRoute] int id)
     {

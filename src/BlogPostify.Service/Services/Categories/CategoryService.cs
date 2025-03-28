@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BlogPostify.Data.IRepositories;
+using BlogPostify.Domain.Commons;
 using BlogPostify.Domain.Configurations;
 using BlogPostify.Domain.Entities;
 using BlogPostify.Service.Commons.CollectionExtensions;
@@ -26,7 +27,7 @@ public class CategoryService : ICategoryService
     public async Task<CategoryForResultDto> AddAsync(CategoryForCreationDto dto)
     {
         
-        if (await repository.SelectAll().AnyAsync(c => c.Name.ToLower() == dto.Name.ToLower()))
+        if (await repository.SelectAll().AnyAsync(c => c.Name == dto.Name))
             throw new BlogPostifyException(409, "Category is already exists");
 
         var mapped = mapper.Map<Category>(dto);
@@ -75,5 +76,41 @@ public class CategoryService : ICategoryService
                                                     .FirstOrDefaultAsync()
             ?? throw new BlogPostifyException(404, "Category is not found");
         return mapper.Map<CategoryForResultDto>(category);
+    }
+
+    public async Task<LanguageResultDto> RetrieveByLanguageAsync(int id, string language)
+    {
+        var ctr = await repository.SelectAll()
+              .Where(p => p.Id == id)
+              .FirstOrDefaultAsync();
+
+        if (ctr == null)
+            throw new KeyNotFoundException($"Category with ID {id} not found!");
+
+        if (ctr.Name == null)
+            throw new InvalidOperationException("Post Name is null!");
+
+        string name = GetLocalizedText(ctr.Name, language);
+
+        return new LanguageResultDto
+        {
+            Id = ctr.Id,
+            Name = name,
+        };
+    }
+
+    private string GetLocalizedText(MultyLanguageField field, string language)
+    {
+        if (field == null)
+            return "No translation available";
+
+        return language switch
+        {
+            "uz" => !string.IsNullOrEmpty(field.Uz) ? field.Uz : field.Eng,
+            "ru" => !string.IsNullOrEmpty(field.Ru) ? field.Ru : field.Eng,
+            "eng" => !string.IsNullOrEmpty(field.Eng) ? field.Eng : field.Uz,
+            "tr" => !string.IsNullOrEmpty(field.Tr) ? field.Tr : field.Eng,
+            _ => field.Uz
+        };
     }
 }

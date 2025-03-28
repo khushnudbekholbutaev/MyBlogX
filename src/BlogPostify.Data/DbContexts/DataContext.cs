@@ -1,7 +1,10 @@
-﻿using BlogPostify.Domain.Entities;
+﻿using BlogPostify.Domain.Commons;
+using BlogPostify.Domain.Entities;
 using BlogPostify.Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Reflection;
 using System.Text.Json;
 
@@ -9,8 +12,19 @@ public class DataContext : DbContext
 {
     public DataContext(DbContextOptions<DataContext> options) : base(options) { }
 
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+
+        var converter = new ValueConverter<MultyLanguageField, string>(
+            v => JsonSerializer.Serialize(v, options),
+            v => JsonSerializer.Deserialize<MultyLanguageField>(v, options));
+
         // ======================== USER CONFIGURATION ========================
         modelBuilder.Entity<User>(entity =>
         {
@@ -83,6 +97,14 @@ public class DataContext : DbContext
         // ======================== POST CONFIGURATION ========================
         modelBuilder.Entity<Post>(entity =>
         {
+            entity.Property(e => e.Title)
+                  .HasConversion(converter)
+                  .HasColumnType("jsonb");
+            
+            entity.Property(e => e.Content)
+                  .HasConversion(converter)
+                  .HasColumnType("jsonb");
+
             entity.Property(p => p.CoverImage).HasMaxLength(500);
 
             entity.HasOne(p => p.User)
@@ -182,20 +204,20 @@ public class DataContext : DbContext
         // ======================== CATEGORY CONFIGURATION ========================
         modelBuilder.Entity<Category>(entity =>
         {
-            entity.Property(e => e.Name)
-                  .IsRequired()
-                  .HasMaxLength(200);
+            //entity.Property(e => e.Name)
+            //      .IsRequired()
+            //      .HasMaxLength(100);
 
-            entity.Property(e => e.Description)
-                  .IsRequired()
-                  .HasMaxLength(500);
+            entity.Property(e => e.Name)
+                  .HasConversion(converter)
+                  .HasColumnType("jsonb");
 
             entity.Property(e => e.CreatedAt)
-                  .HasColumnType("datetimeoffset")
+                  .HasColumnType("timestamp with time zone")
                   .IsRequired();
 
             entity.Property(e => e.UpdatedAt)
-                  .HasColumnType("datetimeoffset")
+                  .HasColumnType("timestamp with time zone")
                   .IsRequired(false); // ✅ NULL bo‘lishi mumkin
 
             entity.HasMany(e => e.PostCategories)
