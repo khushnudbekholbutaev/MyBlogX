@@ -74,6 +74,7 @@ public class PostService : IPostService
             Id = post.Id,
             Title = GetLocalizedText(post.Title, language),
             Content = GetLocalizedText(post.Content, language),
+            CreatedAt = post.CreatedAt,
             CoverImage = post.CoverImage,
             IsPublished = post.IsPublished
         }).ToList();
