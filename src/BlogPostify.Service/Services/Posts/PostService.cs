@@ -82,7 +82,7 @@ public class PostService : IPostService
             Id = post.Id,
             Title = title,
             Content = content,
-            CoverImage = post.CoverImage ?? "default-image.png",
+            CoverImage = post.CoverImage,
             IsPublished = post.IsPublished
         };
     }
