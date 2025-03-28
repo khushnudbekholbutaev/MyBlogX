@@ -35,20 +35,20 @@ public class PostService : IPostService
             ?? throw new BlogPostifyException(404, "User not found");
 
         #region Image
-        //var imageFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(dto.CoverImage.FileName);
-        //var imageRootPath = Path.Combine(WebEnvironmentHost.WebRootPath, "Media", "Posts", "Images", imageFileName);
+        var imageFileName = Guid.NewGuid().ToString("N") + Path.GetExtension(dto.CoverImage.FileName);
+        var imageRootPath = Path.Combine(WebEnvironmentHost.WebRootPath, "Media", "Posts", "Images", imageFileName);
 
-        //using (var stream = new FileStream(imageRootPath, FileMode.Create))
-        //{
-        //    await dto.CoverImage.CopyToAsync(stream);
-        //}
+        using (var stream = new FileStream(imageRootPath, FileMode.Create))
+        {
+            await dto.CoverImage.CopyToAsync(stream);
+        }
 
-        //var imageResult = Path.Combine("Media", "Posts", "Images", imageFileName);
+        var imageResult = Path.Combine("Media", "Posts", "Images", imageFileName);
         #endregion
 
         var mapped = mapper.Map<Post>(dto);
         mapped.CreatedAt = DateTime.UtcNow;
-        mapped.CoverImage = "string";
+        mapped.CoverImage = imageResult;
 
         await repository.InsertAsync(mapped);
         return mapper.Map<PostForResultDto>(mapped);
