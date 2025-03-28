@@ -78,18 +78,24 @@ public class CategoryService : ICategoryService
         return mapper.Map<CategoryForResultDto>(category);
     }
 
-    public async Task<List<LanguageResultDto>> RetrieveByLanguageAsync(string language)
+    public async Task<LanguageResultDto> RetrieveByLanguageAsync(string language)
     {
-        var categories = await repository.SelectAll().ToListAsync();
+        var ctr = await repository.SelectAll()
+              .FirstOrDefaultAsync();
 
-        if (!categories.Any())
-            throw new KeyNotFoundException($"No categories found!");
+        if (ctr == null)
+            throw new KeyNotFoundException($"Category with ID not found!");
 
-        return categories.Select(ctr => new LanguageResultDto
+        if (ctr.Name == null)
+            throw new InvalidOperationException("Post Name is null!");
+
+        string name = GetLocalizedText(ctr.Name, language);
+
+        return new LanguageResultDto
         {
             Id = ctr.Id,
-            Name = GetLocalizedText(ctr.Name, language),
-        }).ToList();
+            Name = name,
+        };
     }
 
     private string GetLocalizedText(MultyLanguageField field, string language)
