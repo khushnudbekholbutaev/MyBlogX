@@ -9,5 +9,5 @@ public interface ICommentService
     Task<CommentForResultDto> RetrieveByIdAsync(long id);
     Task<CommentForResultDto> AddAsync(CommentForCreationDto dto);
     Task<CommentForResultDto> ModifyAsync(long id,CommentForUpdateDto dto);
-    Task<IEnumerable<CommentForResultDto>> RetrieveAllAsync(PaginationParams @params);
+    Task<IEnumerable<CommentForResultDto>> RetrieveAllAsync(int postId, PaginationParams @params);
 }

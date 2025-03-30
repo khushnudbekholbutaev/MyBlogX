@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BlogPostify.Data.IRepositories;
 using BlogPostify.Domain.Entities;
+using BlogPostify.Service.DTOs.Posts;
 using BlogPostify.Service.DTOs.Tags;
 using BlogPostify.Service.Exceptions;
 using BlogPostify.Service.Interfaces.Tags;
@@ -23,12 +24,24 @@ public class TagService : ITagService
 
     public async Task<TagFoResultDto> AddAsync(TagForCreationDto dto)
     {
+        //var check = await repository.SelectAll().FirstOrDefaultAsync(t => t.TagName == dto.TagName)
+        //    ?? throw new BlogPostifyException(404, $"Tag with not found");
         var mapped = mapper.Map<Tag>(dto);
         mapped.CreatedAt = DateTime.UtcNow;
         await repository.InsertAsync(mapped);
 
         return mapper.Map<TagFoResultDto>(mapped);
     }
+
+    public async Task<IEnumerable<TagFoResultDto>> GetByTagAsync(string tag)
+    {
+        var tags = await repository.SelectAll()
+            .Where(t => EF.Functions.ILike(t.TagName, $"%{tag}%"))
+            .ToListAsync();
+
+        return mapper.Map<IEnumerable<TagFoResultDto>>(tags);
+    }
+
 
     public async Task<TagFoResultDto> ModifyAsync(long id, TagForUpdateDto dto)
     {

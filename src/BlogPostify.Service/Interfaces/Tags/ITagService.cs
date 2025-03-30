@@ -1,4 +1,5 @@
 ﻿using BlogPostify.Domain.Configurations;
+using BlogPostify.Service.DTOs.Posts;
 using BlogPostify.Service.DTOs.Tags;
 
 namespace BlogPostify.Service.Interfaces.Tags;
@@ -9,5 +10,6 @@ public interface ITagService
     Task<TagFoResultDto> RetrieveByIdAsync(long id);
     Task<IEnumerable<TagFoResultDto>> RetrieveAllAsync();
     Task<TagFoResultDto> AddAsync(TagForCreationDto dto);
+    Task<IEnumerable<TagFoResultDto>> GetByTagAsync(string tag);
     Task<TagFoResultDto> ModifyAsync(long id,TagForUpdateDto dto);
 }

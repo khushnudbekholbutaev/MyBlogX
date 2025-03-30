@@ -92,6 +92,8 @@ public class CategoryService : ICategoryService
         }).ToList();
     }
 
+
+
     private string GetLocalizedText(MultyLanguageField field, string language)
     {
         if (field == null)

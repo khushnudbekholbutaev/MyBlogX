@@ -12,4 +12,6 @@ public class PostForCreationDto
     public int UserId { get; set; }
     public IFormFile CoverImage { get; set; }
     public bool IsPublished { get; set; }
+    public List<string> Tags { get; set; }
+    public List<int> CategoryIds { get; set; }
 }

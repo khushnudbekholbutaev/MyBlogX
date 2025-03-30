@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Data Base
 builder.Services.AddDbContext<DataContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 #region//// Fix the Cycle
 builder.Services.AddControllers()
@@ -68,7 +68,7 @@ builder.Services.AddAuthentication(options =>
 //Swagger   
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Learn.Api", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Durbek.Api", Version = "v1" });
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

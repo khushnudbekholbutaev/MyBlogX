@@ -8,5 +8,5 @@ public class TagFoResultDto
     public string TagName { get; set; }
 
     // Relations
-    public ICollection<PostTag> PostTags { get; set; }
+    //public ICollection<PostTag> PostTags { get; set; }
 }
