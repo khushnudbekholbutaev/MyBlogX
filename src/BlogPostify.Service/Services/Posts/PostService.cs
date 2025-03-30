@@ -134,37 +134,26 @@ public class PostService(
         await repository.DeleteAsync(id);
         return true;
     }
-    public async Task<LanguageResultDto> RetrieveByLanguageAsync(string language)
+    
+    public async Task<List<LanguageResultDto>> RetrieveByLanguageAsync(string language)
     {
-        var post = await repository.SelectAll()
-            .Where(p => p.IsPublished)
-            .FirstOrDefaultAsync();
-
-        if (post == null) 
-            throw new KeyNotFoundException($"Post with ID not found!");
-
-        if (post.Title == null || post.Content == null)
-            throw new InvalidOperationException("Post Title or Content is null!");
-
-        string title = GetLocalizedText(post.Title, language);
-        string content = GetLocalizedText(post.Content, language);
-
-        return new LanguageResultDto
+        var posts = await repository.SelectAll().ToListAsync();
+    
+        if (!posts.Any())
+            throw new InvalidOperationException("No posts found!");
+    
+        return posts.Select(post => new LanguageResultDto
         {
             Id = post.Id,
-<<<<<<< HEAD
             Title = GetLocalizedText(post.Title, language),
             Content = GetLocalizedText(post.Content, language),
             UserId = post.UserId,
             CreatedAt = post.CreatedAt,
-=======
-            Title = title,
-            Content = content,
->>>>>>> parent of 11d7615 (Update Service)
             CoverImage = post.CoverImage,
             IsPublished = post.IsPublished
-        };
+        }).ToList();
     }
+    
     private string GetLocalizedText(MultyLanguageField field, string language)
     {
         if (field == null)

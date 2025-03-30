@@ -34,7 +34,6 @@ public class PostsController : BaseController
     public async Task<Wrapper> GetByIdAsync([FromRoute] int id)
     {
         var result = await postService.RetrieveIdAsync(id);
-
         return new Wrapper(result);
     }
 

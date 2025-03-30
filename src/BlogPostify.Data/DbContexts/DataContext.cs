@@ -99,11 +99,11 @@ public class DataContext : DbContext
         {
             entity.Property(e => e.Title)
                   .HasConversion(converter)
-                  .HasColumnType("jsonb");
+                  .HasColumnType("nvarchar(max)");
             
             entity.Property(e => e.Content)
                   .HasConversion(converter)
-                  .HasColumnType("jsonb");
+                  .HasColumnType("nvarchar(max)");
 
             entity.Property(p => p.CoverImage).HasMaxLength(500);
 
@@ -151,7 +151,7 @@ public class DataContext : DbContext
             entity.HasOne(c => c.User)
                   .WithMany(u => u.Comments)
                   .HasForeignKey(c => c.UserId)
-                  .OnDelete(DeleteBehavior.Cascade); // Agar User o'chirilsa, Comment ham o'chsin
+                  .OnDelete(DeleteBehavior.Restrict); // Agar User o'chirilsa, Comment ham o'chsin
 
             entity.HasOne(c => c.ParentComment)
                   .WithMany(c => c.Replies)
@@ -210,7 +210,7 @@ public class DataContext : DbContext
 
             entity.Property(e => e.Name)
                   .HasConversion(converter)
-                  .HasColumnType("jsonb");
+                  .HasColumnType("nvarchar(max)");
 
             entity.Property(e => e.CreatedAt)
                   .HasColumnType("datetimeoffset")
