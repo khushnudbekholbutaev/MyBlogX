@@ -24,9 +24,9 @@ public class CommentsController : BaseController
     }
 
     [HttpGet]
-    public async Task<Wrapper> GetAllAsync([FromQuery] PaginationParams @params)
+    public async Task<Wrapper> GetAllAsync([FromQuery] int postId, [FromQuery]PaginationParams @params)
     {
-        var result = await commentService.RetrieveAllAsync(@params);
+        var result = await commentService.RetrieveAllAsync(postId, @params);
         return new Wrapper(result);
     }
 

@@ -1,36 +1,51 @@
 ﻿using AutoMapper;
+using Azure;
+using Azure.Core;
 using BlogPostify.Data.IRepositories;
 using BlogPostify.Domain.Commons;
 using BlogPostify.Domain.Configurations;
 using BlogPostify.Domain.Entities;
 using BlogPostify.Service.Commons.CollectionExtensions;
 using BlogPostify.Service.Commons.Helpers;
+using BlogPostify.Service.DTOs.PostCategories;
 using BlogPostify.Service.DTOs.Posts;
+using BlogPostify.Service.DTOs.PostTags;
+using BlogPostify.Service.DTOs.Tags;
 using BlogPostify.Service.Exceptions;
+using BlogPostify.Service.Interfaces.Categories;
+using BlogPostify.Service.Interfaces.PostCategories;
 using BlogPostify.Service.Interfaces.Posts;
+using BlogPostify.Service.Interfaces.PostTags;
+using BlogPostify.Service.Interfaces.Tags;
 using BlogPostify.Service.Interfaces.Users;
+using BlogPostify.Service.Services.PostTags;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 
 namespace BlogPostify.Service.Services.Posts;
 
-public class PostService : IPostService
+public class PostService(
+    IServiceProvider serviceProvider,
+    IMapper mapper,
+    IRepository<Post, int> repository,
+    IRepository<Tag, long> tagrepository) : IPostService
 {
-    private readonly IMapper mapper;
-    private readonly IUserService userService;
-    private readonly IRepository<Post,int> repository;
-
-    public PostService(
-        IMapper mapper, 
-        IRepository<Post,int> repository,
-        IUserService userService)
-    {
-        this.mapper = mapper;
-        this.repository = repository;
-        this.userService = userService;
-    }
+    private readonly IMapper mapper = mapper;
+    private readonly IRepository<Post,int> repository = repository;
+    private readonly IRepository<Tag,long> tagrepository = tagrepository;
+    private readonly IServiceProvider serviceProvider = serviceProvider;
 
     public async Task<PostForResultDto> AddAsync(PostForCreationDto dto)
     {
+
+        using var scope = serviceProvider.CreateScope();
+        var categoryService = scope.ServiceProvider.GetRequiredService<ICategoryService>();
+        var tagService = scope.ServiceProvider.GetRequiredService<ITagService>();
+        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var pcService = scope.ServiceProvider.GetRequiredService<IPostCategoryService>();
+        var ptService = scope.ServiceProvider.GetRequiredService<IPostTagService>();
+
         var user = await userService.RetrieveByIdasync(dto.UserId)
             ?? throw new BlogPostifyException(404, "User not found");
 
@@ -50,8 +65,65 @@ public class PostService : IPostService
         mapped.CreatedAt = DateTime.UtcNow;
         mapped.CoverImage = imageResult;
 
+        var categoryIdsNames = new List<int>();
+        var name_id = new Dictionary<long, string>();
+
+        foreach (var tagInput in dto.Tags)
+        {
+            if (int.TryParse(tagInput, out int tagId))
+            {
+                var existingTag = await tagService.RetrieveByIdAsync(tagId) 
+                    ?? throw new BlogPostifyException(404, $"Tag with ID {tagId} not found");
+                name_id[existingTag.Id] = existingTag.TagName;
+            }
+            else
+            {
+                var existingTag = await tagrepository.SelectAll().FirstOrDefaultAsync(t => t.TagName == tagInput);
+                if (existingTag == null)
+                {
+                    var tagForCreationDto = new TagForCreationDto
+                    {
+                        TagName = tagInput
+                    };
+                    var added = await tagService.AddAsync(tagForCreationDto);
+                    name_id[added.Id] = added.TagName;
+                }
+                else { name_id[existingTag.Id] = existingTag.TagName; }
+            }
+        }
+
+        foreach (var CategoryIdInput in dto.CategoryIds)
+        {
+            var existingCategory = await categoryService.RetrieveByIdAsync(CategoryIdInput)
+                    ?? throw new BlogPostifyException(404, $"Tag with ID {CategoryIdInput} not found");
+            categoryIdsNames.Add(existingCategory.Id);
+        }
+        var resultDto = mapper.Map<PostForResultDto>(mapped);
+
+        resultDto.TagNames = [.. name_id.Values];
         await repository.InsertAsync(mapped);
-        return mapper.Map<PostForResultDto>(mapped);
+
+        foreach(var CategoryIdInput in dto.CategoryIds)
+        {
+            var postCategoryDto = new PostCategoryForCreationDto
+            {
+                PostId = mapped.Id,
+                CategoryId = CategoryIdInput
+            };
+            await pcService.AddAsync(postCategoryDto);
+        }
+
+        foreach (var tagId in name_id.Keys)
+        {
+            var postTagDto = new PostTagForCreationDto
+            {
+                PostId = mapped.Id,
+                TagId = tagId
+            };
+            await ptService.AddAsync(postTagDto);
+        }
+        return resultDto;
+
     }
 
     public async Task<bool> RemoveAsync(int id)
@@ -74,12 +146,12 @@ public class PostService : IPostService
             Id = post.Id,
             Title = GetLocalizedText(post.Title, language),
             Content = GetLocalizedText(post.Content, language),
+            UserId = post.UserId,
             CreatedAt = post.CreatedAt,
             CoverImage = post.CoverImage,
             IsPublished = post.IsPublished
         }).ToList();
     }
-
     private string GetLocalizedText(MultyLanguageField field, string language)
     {
         if (field == null)

@@ -21,28 +21,21 @@ public class PostsController : BaseController
         return new Wrapper(result);
     }
 
-    [HttpGet]
-    public async Task<Wrapper> GetAllAsync(string language)
+    [HttpGet("language")]
+    public async Task<Wrapper> GetByLanguageAsync()
     {
+        var language = Request.Headers.ContainsKey("language") ? Request.Headers["language"].ToString() : "uz";
+
         var result = await postService.RetrieveByLanguageAsync(language);
         return new Wrapper(result);
     }
 
     [HttpGet("{id}")]
-    public async Task<Wrapper> GetByIdAsync([FromRoute] int id, [FromQuery] string? language = "uz")
+    public async Task<Wrapper> GetByIdAsync([FromRoute] int id)
     {
         var result = await postService.RetrieveIdAsync(id);
 
-        // Foydalanuvchi tanlagan til bo‘yicha ma'lumotni qaytarish
-        var filteredResult = new
-        {
-            result.Id,
-            result.CoverImage,
-            result.UserId,
-            result.IsPublished
-        };
-
-        return new Wrapper(filteredResult);
+        return new Wrapper(result);
     }
 
     [HttpDelete("{id}")]

@@ -1,6 +1,7 @@
 ﻿
 using BlogPostify.Service.DTOs.Tags;
 using BlogPostify.Service.Interfaces.Tags;
+using BlogPostify.Service.Services.Posts;
 using Microsoft.AspNetCore.Mvc;
 using ResultWrapper.Library;
 
@@ -25,6 +26,13 @@ public class TagsController : BaseController
     public async Task<Wrapper> GetAllAsync()
     {
         var result = await tagService.RetrieveAllAsync();
+        return new Wrapper(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<Wrapper> SearchByTagAsync([FromQuery] string tag)
+    {
+        var result = await tagService.GetByTagAsync(tag);
         return new Wrapper(result);
     }
 

@@ -116,9 +116,10 @@ public class CommentService : ICommentService
         return true;
     }
 
-    public async Task<IEnumerable<CommentForResultDto>> RetrieveAllAsync(PaginationParams @params)
+    public async Task<IEnumerable<CommentForResultDto>> RetrieveAllAsync(int postId, PaginationParams @params)
     {
         var commentsQuery = repository.SelectAll()
+                                      .Where(c => c.PostId == postId)
                                       .Include(c => c.Replies);
 
         var comments = await Task.Run(() => commentsQuery.ToPagedList(@params).ToList()); 
