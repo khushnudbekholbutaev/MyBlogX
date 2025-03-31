@@ -11,4 +11,5 @@ public interface IPostService
     Task<PostForResultDto> ModifyAsync(int id, PostForUpdateDto dto);
     Task<List<LanguageResultDto>> RetrieveByLanguageAsync(string language);
     Task<List<PostTitleDto>> SearchByTagAsync(string tag, string language);
+
 }
