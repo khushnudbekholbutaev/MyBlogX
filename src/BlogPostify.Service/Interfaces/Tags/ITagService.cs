@@ -10,6 +10,5 @@ public interface ITagService
     Task<TagFoResultDto> RetrieveByIdAsync(long id);
     Task<IEnumerable<TagFoResultDto>> RetrieveAllAsync();
     Task<TagFoResultDto> AddAsync(TagForCreationDto dto);
-    Task<IEnumerable<TagFoResultDto>> GetByTagAsync(string tag);
     Task<TagFoResultDto> ModifyAsync(long id,TagForUpdateDto dto);
 }

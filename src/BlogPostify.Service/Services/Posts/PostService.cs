@@ -29,11 +29,14 @@ public class PostService(
     IServiceProvider serviceProvider,
     IMapper mapper,
     IRepository<Post, int> repository,
-    IRepository<Tag, long> tagrepository) : IPostService
+    IRepository<Tag, long> tagrepository,
+    IRepository<PostTag, int> ptrepository) : IPostService
 {
     private readonly IMapper mapper = mapper;
     private readonly IRepository<Post,int> repository = repository;
     private readonly IRepository<Tag,long> tagrepository = tagrepository;
+    private readonly IRepository<PostTag,int> ptrepository = ptrepository;
+
     private readonly IServiceProvider serviceProvider = serviceProvider;
 
     public async Task<PostForResultDto> AddAsync(PostForCreationDto dto)
@@ -134,37 +137,48 @@ public class PostService(
         await repository.DeleteAsync(id);
         return true;
     }
-    public async Task<LanguageResultDto> RetrieveByLanguageAsync(string language)
+    public async Task<List<LanguageResultDto>> RetrieveByLanguageAsync(string language)
     {
-        var post = await repository.SelectAll()
+        var posts = await repository.SelectAll()
             .Where(p => p.IsPublished)
-            .FirstOrDefaultAsync();
+            .ToListAsync();
 
-        if (post == null) 
-            throw new KeyNotFoundException($"Post with ID not found!");
+        if (!posts.Any())
+            throw new KeyNotFoundException($"No published posts found!");
 
-        if (post.Title == null || post.Content == null)
-            throw new InvalidOperationException("Post Title or Content is null!");
+        var results = new List<LanguageResultDto>();
 
-        string title = GetLocalizedText(post.Title, language);
-        string content = GetLocalizedText(post.Content, language);
-
-        return new LanguageResultDto
+        foreach (var post in posts)
         {
-            Id = post.Id,
-<<<<<<< HEAD
-            Title = GetLocalizedText(post.Title, language),
-            Content = GetLocalizedText(post.Content, language),
-            UserId = post.UserId,
-            CreatedAt = post.CreatedAt,
-=======
-            Title = title,
-            Content = content,
->>>>>>> parent of 11d7615 (Update Service)
-            CoverImage = post.CoverImage,
-            IsPublished = post.IsPublished
-        };
+            var tagIds = await ptrepository.SelectAll()
+                .Where(pt => pt.PostId == post.Id)
+                .Select(pt => pt.TagId)
+                .ToListAsync();
+
+            var tagNames = await tagrepository.SelectAll()
+                .Where(tag => tagIds.Contains(tag.Id))
+                .Select(tag => tag.TagName)
+                .ToListAsync();
+
+            string title = GetLocalizedText(post.Title, language);
+            string content = GetLocalizedText(post.Content, language);
+
+            results.Add(new LanguageResultDto
+            {
+                Id = post.Id,
+                Title = title,
+                Content = content,
+                UserId = post.UserId,
+                TagNames = tagNames,
+                CreatedAt = post.CreatedAt,
+                CoverImage = post.CoverImage,
+                IsPublished = post.IsPublished
+            });
+        }
+
+        return results;
     }
+
     private string GetLocalizedText(MultyLanguageField field, string language)
     {
         if (field == null)
@@ -192,6 +206,37 @@ public class PostService(
 
         return result;
     }
+
+    public async Task<List<PostTitleDto>> SearchByTagAsync(string tag, string language)
+    {
+        // 1. Tag ID larni olish
+        var tagIds = await tagrepository.SelectAll()
+            .Where(t => EF.Functions.ILike(t.TagName, $"%{tag}%"))
+            .Select(t => t.Id)
+            .ToListAsync();
+
+        // 2. Shu taglarga tegishli post ID larni olish
+        var postIds = await ptrepository.SelectAll()
+            .Where(pt => tagIds.Contains(pt.TagId))
+            .Select(pt => pt.PostId)
+            .Distinct()
+            .ToListAsync();
+
+        // 3. Ushbu postlar uchun kerakli tilga mos `Title` larni olish
+        var posts = await repository.SelectAll()
+            .Where(p => postIds.Contains(p.Id))
+            .ToListAsync();
+
+        var results = posts.Select(post => new PostTitleDto
+        {
+            Id = post.Id,
+            Title = GetLocalizedText(post.Title, language) // ✅ Lokalizatsiya qilingan sarlavha
+        }).ToList();
+
+        return results;
+    }
+
+
     public async Task<PostForResultDto> ModifyAsync(int id, PostForUpdateDto dto)
     {
         var post = await repository.SelectAll()

@@ -29,13 +29,6 @@ public class TagsController : BaseController
         return new Wrapper(result);
     }
 
-    [HttpGet("search")]
-    public async Task<Wrapper> SearchByTagAsync([FromQuery] string tag)
-    {
-        var result = await tagService.GetByTagAsync(tag);
-        return new Wrapper(result);
-    }
-
     [HttpGet("{id}")]
     public async Task<Wrapper> GetByIdAsync([FromRoute] int id)
     {
