@@ -29,6 +29,15 @@ public class PostsController : BaseController
         var result = await postService.RetrieveByLanguageAsync(language);
         return new Wrapper(result);
     }
+    
+    [HttpGet("tags")]
+    public async Task<Wrapper> GetByLanguageAsync(string tag)
+    {
+        var language = Request.Headers.ContainsKey("language") ? Request.Headers["language"].ToString() : "uz";
+
+        var result = await postService.SearchByTagAsync(tag, language);
+        return new Wrapper(result);
+    }
 
     [HttpGet("{id}")]
     public async Task<Wrapper> GetByIdAsync([FromRoute] int id)

@@ -21,7 +21,6 @@ public class TagService : ITagService
         this.repository = repository;
     }
 
-
     public async Task<TagFoResultDto> AddAsync(TagForCreationDto dto)
     {
         //var check = await repository.SelectAll().FirstOrDefaultAsync(t => t.TagName == dto.TagName)
@@ -32,16 +31,6 @@ public class TagService : ITagService
 
         return mapper.Map<TagFoResultDto>(mapped);
     }
-
-    public async Task<IEnumerable<TagFoResultDto>> GetByTagAsync(string tag)
-    {
-        var tags = await repository.SelectAll()
-            .Where(t => EF.Functions.ILike(t.TagName, $"%{tag}%"))
-            .ToListAsync();
-
-        return mapper.Map<IEnumerable<TagFoResultDto>>(tags);
-    }
-
 
     public async Task<TagFoResultDto> ModifyAsync(long id, TagForUpdateDto dto)
     {
