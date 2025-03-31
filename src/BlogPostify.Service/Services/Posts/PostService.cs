@@ -210,20 +210,17 @@ public class PostService(
 
     public async Task<List<PostTitleDto>> SearchByTagAsync(string tag, string language)
     {
-        // 1. Tag ID larni olish
         var tagIds = await tagrepository.SelectAll()
-            .Where(t => EF.Functions.ILike(t.TagName, $"%{tag}%"))
+            .Where(t => EF.Functions.Like(t.TagName, $"%{tag}%"))
             .Select(t => t.Id)
             .ToListAsync();
 
-        // 2. Shu taglarga tegishli post ID larni olish
         var postIds = await ptrepository.SelectAll()
             .Where(pt => tagIds.Contains(pt.TagId))
             .Select(pt => pt.PostId)
             .Distinct()
             .ToListAsync();
 
-        // 3. Ushbu postlar uchun kerakli tilga mos `Title` larni olish
         var posts = await repository.SelectAll()
             .Where(p => postIds.Contains(p.Id))
             .ToListAsync();
@@ -231,7 +228,7 @@ public class PostService(
         var results = posts.Select(post => new PostTitleDto
         {
             Id = post.Id,
-            Title = GetLocalizedText(post.Title, language) // ✅ Lokalizatsiya qilingan sarlavha
+            Title = GetLocalizedText(post.Title, language)
         }).ToList();
 
         return results;
