@@ -138,46 +138,109 @@ public class PostService(
         return true;
     }
     
-    public async Task<List<LanguageResultDto>> RetrieveByLanguageAsync(string language)
+    public async Task<List<LanguageResultDto>> RetrieveByLanguageAsync(string language, string tag)
     {
-        var posts = await repository.SelectAll()
+    #region
+    //var posts = await repository.SelectAll()
+    //.Where(p => p.IsPublished)
+    //.ToListAsync();
+
+    //if (!posts.Any())
+    //    throw new KeyNotFoundException($"No published posts found!");
+
+    //var results = new List<LanguageResultDto>();
+
+    //foreach (var post in posts)
+    //{
+    //    var tagIds = await ptrepository.SelectAll()
+    //        .Where(pt => pt.PostId == post.Id)
+    //        .Select(pt => pt.TagId)
+    //        .ToListAsync();
+
+    //    var tagNames = await tagrepository.SelectAll()
+    //        .Where(tag => tagIds.Contains(tag.Id))
+    //        .Select(tag => tag.TagName)
+    //        .ToListAsync();
+
+    //    string title = GetLocalizedText(post.Title, language);
+    //    string content = GetLocalizedText(post.Content, language);
+
+    //    results.Add(new LanguageResultDto
+    //    {
+    //        Id = post.Id,
+    //        Title = title,
+    //        Content = content,
+    //        UserId = post.UserId,
+    //        TagNames = tagNames,
+    //        CreatedAt = post.CreatedAt,
+    //        CoverImage = post.CoverImage,
+    //        IsPublished = post.IsPublished
+    //    });
+    //}
+
+    //return results;
+    #endregion
+
+    List<Post> posts;
+
+    if (string.IsNullOrWhiteSpace(tag))
+    {
+        posts = await repository.SelectAll()
             .Where(p => p.IsPublished)
             .ToListAsync();
+    }
+    else
+    {
+        var tagIds = await tagrepository.SelectAll()
+            .Where(t => EF.Functions.Like(t.TagName, $"%{tag}%")) 
+            .Select(t => t.Id)
+            .ToListAsync();
 
-        if (!posts.Any())
-            throw new KeyNotFoundException($"No published posts found!");
+        var postIds = await ptrepository.SelectAll()
+            .Where(pt => tagIds.Contains(pt.TagId))
+            .Select(pt => pt.PostId)
+            .Distinct() 
+            .ToListAsync();
 
-        var results = new List<LanguageResultDto>();
+        posts = await repository.SelectAll()
+            .Where(p => postIds.Contains(p.Id) && p.IsPublished) 
+            .ToListAsync();
+    }
 
-        foreach (var post in posts)
+    if (!posts.Any())
+        throw new KeyNotFoundException($"No published posts found!");
+
+    var results = new List<LanguageResultDto>();
+
+    foreach (var post in posts)
+    {
+        var postTagIds = await ptrepository.SelectAll()
+            .Where(pt => pt.PostId == post.Id)
+            .Select(pt => pt.TagId)
+            .ToListAsync();
+
+        var tagNames = await tagrepository.SelectAll()
+            .Where(tag => postTagIds.Contains(tag.Id))
+            .Select(tag => tag.TagName)
+            .ToListAsync();
+
+        string title = GetLocalizedText(post.Title, language);
+        string content = GetLocalizedText(post.Content, language);
+
+        results.Add(new LanguageResultDto
         {
-            var tagIds = await ptrepository.SelectAll()
-                .Where(pt => pt.PostId == post.Id)
-                .Select(pt => pt.TagId)
-                .ToListAsync();
+            Id = post.Id,
+            Title = title,
+            Content = content,
+            UserId = post.UserId,
+            TagNames = tagNames, 
+            CreatedAt = post.CreatedAt,
+            CoverImage = post.CoverImage,
+            IsPublished = post.IsPublished
+        });
+    }
 
-            var tagNames = await tagrepository.SelectAll()
-                .Where(tag => tagIds.Contains(tag.Id))
-                .Select(tag => tag.TagName)
-                .ToListAsync();
-
-            string title = GetLocalizedText(post.Title, language);
-            string content = GetLocalizedText(post.Content, language);
-
-            results.Add(new LanguageResultDto
-            {
-                Id = post.Id,
-                Title = title,
-                Content = content,
-                UserId = post.UserId,
-                TagNames = tagNames,
-                CreatedAt = post.CreatedAt,
-                CoverImage = post.CoverImage,
-                IsPublished = post.IsPublished
-            });
-        }
-
-        return results;
+    return results;
     }
 
     private string GetLocalizedText(MultyLanguageField field, string language)
