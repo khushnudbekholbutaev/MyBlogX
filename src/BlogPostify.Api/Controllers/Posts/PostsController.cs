@@ -22,16 +22,16 @@ public class PostsController : BaseController
     }
 
     [HttpGet("language")]
-    public async Task<Wrapper> GetByLanguageAsync()
+    public async Task<Wrapper> GetByLanguageAsync([FromQuery]string? tag)
     {
         var language = Request.Headers.ContainsKey("language") ? Request.Headers["language"].ToString() : "uz";
 
-        var result = await postService.RetrieveByLanguageAsync(language);
+        var result = await postService.RetrieveByLanguageAsync(language, tag);
         return new Wrapper(result);
     }
     
     [HttpGet("tags")]
-    public async Task<Wrapper> GetPostByTagAsync(string tag)
+    public async Task<Wrapper> GetPostByTagAsync([FromQuery]string tag)
     {
         var language = Request.Headers.ContainsKey("language") ? Request.Headers["language"].ToString() : "uz";
 
