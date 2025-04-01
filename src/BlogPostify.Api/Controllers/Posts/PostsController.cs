@@ -31,7 +31,7 @@ public class PostsController : BaseController
     }
     
     [HttpGet("tags")]
-    public async Task<Wrapper> GetByLanguageAsync(string tag)
+    public async Task<Wrapper> GetPostByTagAsync(string tag)
     {
         var language = Request.Headers.ContainsKey("language") ? Request.Headers["language"].ToString() : "uz";
 
